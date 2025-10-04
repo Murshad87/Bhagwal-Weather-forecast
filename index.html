@@ -57,7 +57,8 @@ function createForecastCard(day){
 
 // Fetch Bhagwal weather via AllOrigins CORS proxy
 const url = `https://api.openweathermap.org/data/2.5/onecall?lat=${bhagwal.lat}&lon=${bhagwal.lon}&exclude=minutely,hourly,alerts&units=metric&appid=${apiKey}`;
-const proxyUrl = `https://<your-vercel-project>.vercel.app/api/weather?lat=${bhagwal.lat}&lon=${bhagwal.lon}`;
+const proxyUrl = "https://bhagwal-weather-forecast.vercel.app/api/weather?lat=32.82139585833284&lon=73.9552418499999";
+
 
 
 fetch(proxyUrl)
