@@ -29,14 +29,16 @@ header { background:#1e3a8a; color:white; text-align:center; padding:20px; }
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-const apiKey = "2be72ffaa3b107ec1563e3f0061d687e"; // Your OpenWeatherMap key
+// Bhagwal coordinates
 const bhagwal = { name:"Bhagwal", lat:32.82139585833284, lon:73.9552418499999 };
+const apiKey = "2be72ffaa3b107ec1563e3f0061d687e";
 
 // Initialize map
 const map = L.map('map').setView([bhagwal.lat, bhagwal.lon], 12);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:"© OpenStreetMap contributors" }).addTo(map);
 L.marker([bhagwal.lat, bhagwal.lon]).addTo(map).bindPopup(`<b>${bhagwal.name}</b>`).openPopup();
 
+// Container for weather cards
 const container = document.getElementById("weather-container");
 
 // Create forecast card
@@ -77,5 +79,6 @@ fetch(proxyUrl)
     container.innerHTML = "<p>Failed to load Bhagwal weather. Check API key or internet.</p>";
   });
 </script>
+
 </body>
 </html>
