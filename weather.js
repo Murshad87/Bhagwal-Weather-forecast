@@ -1,0 +1,14 @@
+import fetch from 'node-fetch';
+
+export default async function handler(req, res) {
+  const { lat, lon } = req.query;
+  const apiKey = "2be72ffaa3b107ec1563e3f0061d687e"; 
+  const url = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly,alerts&units=metric&appid=${apiKey}`;
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    res.status(200).json(data);
+  } catch(err) {
+    res.status(500).json({ error: err.message });
+  }
+}
