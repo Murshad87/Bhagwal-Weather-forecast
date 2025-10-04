@@ -3,82 +3,81 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bhagwal 7-Day Weather</title>
+<title>Bhagwal Weather Dashboard</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <style>
 body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f4f4f4; }
 header { background:#1e3a8a; color:white; text-align:center; padding:20px; }
-#map { height:400px; border-radius:12px; margin:20px auto; max-width:600px; }
-.weather-section { margin:20px auto; max-width:600px; }
-.weather-section h2 { text-align:center; color:#1e3a8a; margin-bottom:10px; }
-.forecast { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; }
-.card { background:#4299e1; color:white; padding:15px; border-radius:10px; width:120px; text-align:center; box-shadow:0 3px 6px rgba(0,0,0,0.15); }
-.card img { width:50px; height:50px; }
-.card p { margin:5px 0; font-size:0.9em; }
+#map { height:400px; margin:20px auto; max-width:700px; border-radius:12px; }
+.forecast-container { max-width:700px; margin:20px auto; display:flex; justify-content:center; flex-wrap:wrap; gap:10px; }
+.widget-card { background:#4299e1; color:white; padding:15px; border-radius:10px; width:120px; text-align:center; box-shadow:0 3px 6px rgba(0,0,0,0.15); }
+.widget-card img { width:50px; height:50px; }
+footer { text-align:center; margin:20px; color:#555; font-size:0.9em; }
 </style>
 </head>
 <body>
 
 <header>
-<h1>Bhagwal 7-Day Weather Forecast</h1>
+<h1>Bhagwal Weather Dashboard</h1>
 <p>Kharian Tehsil, Gujrat District, Punjab, Pakistan</p>
 </header>
 
 <div id="map"></div>
-<div id="weather-container"></div>
+
+<div class="forecast-container" id="forecast-container">
+  <!-- 7-day forecast cards will appear here -->
+</div>
+
+<footer>
+<p>Powered by <a href="https://openweathermap.org/" target="_blank">OpenWeatherMap</a></p>
+<p>© 2025 Bhagwal Weather Dashboard</p>
+</footer>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 // Bhagwal coordinates
 const bhagwal = { name:"Bhagwal", lat:32.82139585833284, lon:73.9552418499999 };
-const apiKey = "2be72ffaa3b107ec1563e3f0061d687e";
 
 // Initialize map
 const map = L.map('map').setView([bhagwal.lat, bhagwal.lon], 12);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, attribution:"© OpenStreetMap contributors" }).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+// OpenWeatherMap temperature overlay
+L.tileLayer(`https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=2be72ffaa3b107ec1563e3f0061d687e`, {
+  attribution: 'Weather data © OpenWeatherMap',
+  opacity: 0.5
+}).addTo(map);
+
+// Add Bhagwal pin
 L.marker([bhagwal.lat, bhagwal.lon]).addTo(map).bindPopup(`<b>${bhagwal.name}</b>`).openPopup();
 
-// Container for weather cards
-const container = document.getElementById("weather-container");
-
-// Create forecast card
-function createForecastCard(day){
-  const date = new Date(day.dt*1000);
-  const card = document.createElement("div");
-  card.className = "card";
-  card.innerHTML = `
-    <p>${date.toLocaleDateString('en-US', { weekday: 'short' })}</p>
-    <img src="https://openweathermap.org/img/wn/${day.weather[0].icon}.png" alt="${day.weather[0].description}" />
-    <p>${Math.round(day.temp.day)}°C</p>
-    <p>${day.weather[0].main}</p>
-  `;
-  return card;
-}
-
-// Fetch Bhagwal weather via AllOrigins CORS proxy
-const url = `https://api.openweathermap.org/data/2.5/onecall?lat=${bhagwal.lat}&lon=${bhagwal.lon}&exclude=minutely,hourly,alerts&units=metric&appid=${apiKey}`;
-const proxyUrl = "https://bhagwal-weather-forecast.vercel.app/api/weather?lat=32.82139585833284&lon=73.9552418499999";
-
-
+// ---------------------
+// Fetch 7-day forecast dynamically from Vercel serverless function
+const forecastContainer = document.getElementById("forecast-container");
+const proxyUrl = "<YOUR_VERCEL_URL>/api/weather?lat=32.82139585833284&lon=73.9552418499999";
 
 fetch(proxyUrl)
   .then(res => res.json())
   .then(data => {
-    const jsonData = JSON.parse(data.contents);
-    const section = document.createElement("div");
-    section.className = "weather-section";
-    section.innerHTML = `<h2>${bhagwal.name} - 7-Day Forecast</h2>`;
-    const forecastDiv = document.createElement("div");
-    forecastDiv.className = "forecast";
-
-    jsonData.daily.forEach(day => forecastDiv.appendChild(createForecastCard(day)));
-
-    section.appendChild(forecastDiv);
-    container.appendChild(section);
+    data.daily.slice(0,7).forEach(day => {
+      const date = new Date(day.dt*1000);
+      const card = document.createElement("div");
+      card.className = "widget-card";
+      card.innerHTML = `
+        <p>${date.toLocaleDateString('en-US', { weekday: 'short' })}</p>
+        <img src="https://openweathermap.org/img/wn/${day.weather[0].icon}.png" alt="${day.weather[0].main}" />
+        <p>${Math.round(day.temp.day)}°C</p>
+        <p>${day.weather[0].main}</p>
+      `;
+      forecastContainer.appendChild(card);
+    });
   })
   .catch(err => {
-    console.error("Error fetching Bhagwal weather:", err);
-    container.innerHTML = "<p>Failed to load Bhagwal weather. Check API key or internet.</p>";
+    console.error("Error loading weather:", err);
+    forecastContainer.innerHTML = "<p>Failed to load Bhagwal weather. Check API key, Vercel deployment, or internet.</p>";
   });
 </script>
 
